@@ -108,14 +108,16 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 ASGI_APPLICATION = 'core.asgi.application'
 
 # Production Redis Channel Layer via Upstash with SSL Bypass
+import ssl
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [{
-                'address': 'rediss://default:gQAAAAAAAYvJAAIgcDIyNGE2YTc0MTc3OWI0Y2E5ODMwMzA5OTA5ZTQyZGJiMA@touching-calf-101321.upstash.io:6379',
-                'ssl_cert_reqs': ssl.CERT_NONE,
-            }],
+            "hosts": [
+                'rediss://default:gQAAAAAAAYvJAAIgcDIyNGE2YTc0MTc3OWI0Y2E5ODMwMzA5OTA5ZTQyZGJiMA@touching-calf-101321.upstash.io:6379'
+            ],
+            "ssl_context": ssl._create_unverified_context(),
         },
     },
 }
