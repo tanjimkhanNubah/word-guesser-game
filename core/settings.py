@@ -106,8 +106,14 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # WebSockets Configuration
 ASGI_APPLICATION = 'core.asgi.application'
 
+# Production Redis Channel Layer via Upstash
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [
+                "rediss://default:gQAAAAAAAYvJAAIgcDIyNGE2YTc0MTc3OWI0Y2E5ODMwMzA5OTA5ZTQyZGJiMA@touching-calf-101321.upstash.io:6379"
+            ],
+        },
     },
 }
