@@ -1,0 +1,115 @@
+* {
+    box-sizing: border-box;
+    font-family: 'Fredoka', 'Nunito', sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: url('/static/images/bg.jpg') no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Glassmorphism Card Overlay - Transparent Dark Grey */
+.game-container {
+    background: rgba(30, 39, 46, 0.75) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px);
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 25px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+    padding: 25px;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    color: #6a0303;
+}
+
+/* WORD GUESSER Title Styling */
+.title-cute, h1, .game-container h1, .game-container h2 {
+    color: #ff5e57 !important;
+    font-size: 32px !important;
+    font-weight: 900 !important;
+    letter-spacing: 1px;
+    text-shadow: 0px 3px 10px rgba(0, 0, 0, 0.5) !important;
+    margin-bottom: 20px !important;
+}
+
+/* Select Number of Players Text */
+.game-container p, .game-container label {
+    color: #970909 !important;
+    font-weight: 600;
+}
+
+/* 3D Cute Buttons */
+.btn-cute, .btn-green, .btn-primary {
+    background: #00d2d3 !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 12px 25px !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    border-radius: 18px !important;
+    box-shadow: 0 5px 0 #01a3a4, 0 8px 15px rgba(0, 0, 0, 0.3) !important;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    margin: 8px;
+}
+
+.btn-cute:active, .btn-green:active {
+    transform: translateY(4px) !important;
+    box-shadow: 0 1px 0 #01a3a4 !important;
+}
+
+.input-cute {
+    width: 80%;
+    padding: 12px;
+    border: 3px solid #00d2d3;
+    border-radius: 15px;
+    font-size: 16px;
+    outline: none;
+    margin-bottom: 15px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* Player Slot Input Grid */
+.player-slots {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.player-box {
+    background: rgba(209, 48, 48, 0.9);
+    border: 2px dashed #ff5e57;
+    border-radius: 12px;
+    padding: 10px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+/* FIX 1: Inner White Event Box Text Visibility */
+.game-events-box, .game-events-box *, #game-events, #game-events *, 
+.chat-box, .events-container, .events-container *,
+#qa-box, #qa-box *, .qa-box, .qa-box * {
+    color: #0f172a !important; /* Deep contrast dark text for maximum visibility */
+}
+
+/* FIX 2: Scoreboard Modal Text & Names Visibility */
+#scoreboard-modal, #gameover-modal {
+    background: rgba(30, 39, 46, 0.95) !important;
+    border-radius: 25px !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+}
+
+#scores-list, #scores-list *, #final-scores-list, #final-scores-list *,
+.modal-content, .modal-content * {
+    color: #0f172a !important; /* High contrast dark text for inner modal cards */
+}

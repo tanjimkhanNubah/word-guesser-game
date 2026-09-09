@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Guesser - Lobby</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<div class="game-container" id="lobby-card">
+    <h1 style="color: #e67e22;">🎮 WORD GUESSER</h1>
+
+    <!-- Step 1: PLAY Button -->
+    <div id="step-play">
+        <button class="btn-cute btn-green" style="font-size: 24px; padding: 15px 40px;" onclick="showPlayerCount()">PLAY</button>
+    </div>
+
+    <!-- Step 2: Select Number of Players -->
+    <div id="step-count" style="display: none;">
+        <h3>Select Number of Players:</h3>
+        <button class="btn-cute" onclick="setPlayerSlots(3)">3 Players</button>
+        <button class="btn-cute" onclick="setPlayerSlots(4)">4 Players</button>
+        <button class="btn-cute" onclick="setPlayerSlots(5)">5 Players</button>
+    </div>
+
+    <!-- Step 3: Name Inputs -->
+    <div id="step-names" style="display: none;">
+        <h3>Enter Your Details:</h3>
+        <input type="text" id="room_code" class="input-cute" placeholder="Enter Room Code (e.g. FUN123)">
+        
+        <p style="font-size: 14px; color: #7f8c8d;">Your Name Slot:</p>
+        <input type="text" id="player_name" class="input-cute" placeholder="Enter Your Name">
+
+        <br>
+        <button class="btn-cute btn-green" onclick="enterGame()">JOIN ARENA</button>
+    </div>
+</div>
+
+<script>
+    function showPlayerCount() {
+        document.getElementById('step-play').style.display = 'none';
+        document.getElementById('step-count').style.display = 'block';
+    }
+
+    function setPlayerSlots(count) {
+        document.getElementById('step-count').style.display = 'none';
+        document.getElementById('step-names').style.display = 'block';
+    }
+
+    function enterGame() {
+        const room = document.getElementById('room_code').value.trim();
+        const name = document.getElementById('player_name').value.trim();
+        if(room && name) {
+            window.location.href = `/game/${room}/?player=${encodeURIComponent(name)}`;
+        } else {
+            alert('Please enter both Room Code and Your Name!');
+        }
+    }
+</script>
+
+</body>
+</html>
