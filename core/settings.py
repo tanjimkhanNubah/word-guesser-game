@@ -10,17 +10,13 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
 SECRET_KEY = 'django-insecure-o(hu^a28i_#b9ea1$p7@_x9%$u70!#i+az)c)sovat-w5^$am('
 
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'daphne',  # Must be at the very top for WebSockets
     'django.contrib.admin',
@@ -35,7 +31,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise Static File Handler
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -63,7 +59,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-
 # Database
 DATABASES = {
     'default': {
@@ -72,52 +67,40 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
-
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
+# Static files
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # WebSockets Configuration
 ASGI_APPLICATION = 'core.asgi.application'
 
-# Production Redis Channel Layer via Upstash with SSL Bypass
-import ssl
+# Upstash SSL Redis Channel Layer Configuration
+ssl_ctx = ssl.create_default_context()
+ssl_ctx.check_hostname = False
+ssl_ctx.verify_mode = ssl.CERT_NONE
 
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [
-                'rediss://default:gQAAAAAAAYvJAAIgcDIyNGE2YTc0MTc3OWI0Y2E5ODMwMzA5OTA5ZTQyZGJiMA@touching-calf-101321.upstash.io:6379'
-            ],
-            "ssl_context": ssl._create_unverified_context(),
+            "hosts": [{
+                'address': 'rediss://default:gQAAAAAAAYvJAAIgcDIyNGE2YTc0MTc3OWI0Y2E5ODMwMzA5OTA5ZTQyZGJiMA@touching-calf-101321.upstash.io:6379',
+                'ssl': ssl_ctx,
+            }],
         },
     },
 }

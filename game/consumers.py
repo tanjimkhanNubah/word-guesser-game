@@ -41,6 +41,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                 game_state['players'].append(player)
                 game_state['scores'][player] = 0
 
+            # 3 or more players trigger game start
             if len(game_state['players']) >= 3 and game_state['phase'] == 'WAITING':
                 game_state['phase'] = 'WORD_SELECT'
                 game_state['total_rounds'] = len(game_state['players'])
@@ -48,7 +49,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.broadcast_state()
 
         elif action == 'set_word':
-            if game_state['players'][game_state['current_chooser_idx']] == player:
+            if len(game_state['players']) > 0 and game_state['players'][game_state['current_chooser_idx']] == player:
                 game_state['target_word'] = data.get('word', '').strip().lower()
                 game_state['phase'] = 'PLAYING'
                 game_state['questions_asked'] = 0
@@ -68,16 +69,19 @@ class GameConsumer(AsyncWebsocketConsumer):
                 })
 
         elif action == 'answer_question':
-            current_chooser = game_state['players'][game_state['current_chooser_idx']]
-            if player == current_chooser:
-                await self.broadcast({
-                    'type': 'new_answer',
-                    'answer': data.get('answer'),
-                    'quoted_question': data.get('quoted_question'),
-                    'by': player
-                })
+            if len(game_state['players']) > 0:
+                current_chooser = game_state['players'][game_state['current_chooser_idx']]
+                if player == current_chooser:
+                    await self.broadcast({
+                        'type': 'new_answer',
+                        'answer': data.get('answer'),
+                        'quoted_question': data.get('quoted_question'),
+                        'by': player
+                    })
 
         elif action == 'submit_guess':
+            if len(game_state['players']) == 0:
+                return
             current_chooser = game_state['players'][game_state['current_chooser_idx']]
             if player == current_chooser or game_state['phase'] != 'PLAYING':
                 return
@@ -88,7 +92,6 @@ class GameConsumer(AsyncWebsocketConsumer):
             if game_state['player_guesses'].get(player, 0) < max_guesses:
                 game_state['player_guesses'][player] += 1
                 
-                # 1. Correct Guess -> Player gets 1 Point & Round Ends Immediately
                 if guess == game_state['target_word']:
                     if not game_state.get('is_processing_turn', False):
                         game_state['is_processing_turn'] = True
@@ -108,7 +111,6 @@ class GameConsumer(AsyncWebsocketConsumer):
                     })
                     await self.broadcast_state()
                     
-                    # 2. Check if all active guessers ran out of guesses (3 attempts each)
                     active_guessers = [p for p in game_state['players'] if p != current_chooser]
                     all_failed = all(game_state['player_guesses'].get(p, 0) >= max_guesses for p in active_guessers)
                     
@@ -121,17 +123,17 @@ class GameConsumer(AsyncWebsocketConsumer):
                         })
                         await self.finish_turn()
 
-        # 3. 5-Minute Timer Expiry Handling
         elif action == 'timer_expired':
-            current_chooser = game_state['players'][game_state['current_chooser_idx']]
-            if not game_state.get('is_processing_turn', False) and game_state['phase'] == 'PLAYING':
-                game_state['is_processing_turn'] = True
-                game_state['scores'][current_chooser] += 2
-                await self.broadcast({
-                    'type': 'system_notice',
-                    'msg': f'⏰ 5 Minutes expired! Chooser ({current_chooser}) gets 2 points!'
-                })
-                await self.finish_turn()
+            if len(game_state['players']) > 0:
+                current_chooser = game_state['players'][game_state['current_chooser_idx']]
+                if not game_state.get('is_processing_turn', False) and game_state['phase'] == 'PLAYING':
+                    game_state['is_processing_turn'] = True
+                    game_state['scores'][current_chooser] += 2
+                    await self.broadcast({
+                        'type': 'system_notice',
+                        'msg': f'⏰ Time expired! Chooser ({current_chooser}) gets 2 points!'
+                    })
+                    await self.finish_turn()
 
         elif action == 'restart_game':
             game_state['scores'] = {p: 0 for p in game_state['players']}
@@ -145,32 +147,30 @@ class GameConsumer(AsyncWebsocketConsumer):
         game_state = ROOMS[self.room_name]
         game_state['completed_rounds'] += 1
 
-        # Check if ALL players had 1 turn as Chooser
         if game_state['completed_rounds'] >= len(game_state['players']):
             game_state['phase'] = 'GAME_OVER'
             await self.broadcast_state()
         else:
-            # Force SCOREBOARD phase immediately for EVERY round (Broadcasts to all clients)
             game_state['phase'] = 'SCOREBOARD'
             await self.broadcast_state()
 
-            # Wait 20 seconds on Round Scoreboard
-            await asyncio.sleep(20)
+            await asyncio.sleep(10)
 
-            # Move to next chooser
             game_state['current_chooser_idx'] = (game_state['current_chooser_idx'] + 1) % len(game_state['players'])
             game_state['phase'] = 'WORD_SELECT'
             game_state['is_processing_turn'] = False
             await self.broadcast_state()
 
     async def broadcast_state(self):
+        # Serialize state safely for Channel Layer Redis
+        state_data = json.loads(json.dumps(ROOMS[self.room_name]))
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'game_message',
                 'payload': {
                     'type': 'state_update',
-                    'state': ROOMS[self.room_name]
+                    'state': state_data
                 }
             }
         )
