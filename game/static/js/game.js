@@ -27,16 +27,12 @@ gameSocket.onmessage = function(e) {
     } else if (data.type === 'new_question') {
         const qaBox = document.getElementById('qa-box');
         if (qaBox) {
-            const qCountEl = document.getElementById('q-count');
-            if (qCountEl) qCountEl.innerText = `(${data.q_count}/${data.max_q})`;
-
             const p = document.createElement('p');
             p.innerHTML = `<b>❓ ${data.by}:</b> ${data.question}`;
             p.style.cursor = 'pointer';
             p.style.margin = '5px 0';
             p.title = 'Click to reply';
 
-            // Chooser clicking a question triggers WhatsApp-style reply preview
             p.onclick = function() {
                 if (window.isChooser) {
                     currentQuotedQuestion = data.question;
@@ -58,7 +54,6 @@ gameSocket.onmessage = function(e) {
             qaBox.scrollTop = qaBox.scrollHeight;
         }
     } else if (data.type === 'correct_guess') {
-        // Stop timer immediately on correct guess
         clearInterval(gameTimer);
         gameTimer = null;
         const qaBox = document.getElementById('qa-box');
@@ -121,9 +116,55 @@ function updateUI(state) {
     const gameoverModal = document.getElementById('gameover-modal');
     const timerDisplay = document.getElementById('timer-display');
 
+    // Counts elements
+    const qCountEl = document.getElementById('q-count');
+    const guessCountEl = document.getElementById('guess-count');
+    const qInput = document.getElementById('question-input');
+    const qBtn = document.getElementById('ask-btn');
+    const gInput = document.getElementById('guess-input');
+    const gBtn = document.getElementById('guess-btn');
+
     const chooser = state.players[state.current_chooser_idx] || '';
     const maxRequired = state.max_players || 3;
     window.isChooser = (playerName === chooser);
+
+    // Update Questions count & Red Box rule (Limit 8)
+    const qAsked = state.questions_asked || 0;
+    if (qCountEl) qCountEl.innerText = `(${qAsked}/8)`;
+    if (qInput && qBtn) {
+        if (qAsked >= 8) {
+            qInput.disabled = true;
+            qBtn.disabled = true;
+            qInput.style.backgroundColor = '#f8d7da';
+            qInput.style.borderColor = '#f5c6cb';
+            qInput.placeholder = "Max questions reached (8/8)!";
+        } else {
+            qInput.disabled = false;
+            qBtn.disabled = false;
+            qInput.style.backgroundColor = '#ffffff';
+            qInput.style.borderColor = '#ccc';
+            qInput.placeholder = "Ask a question about the word...";
+        }
+    }
+
+    // Update Guesses count & Red Box rule (Limit 3 per player)
+    const myGuesses = (state.player_guesses && state.player_guesses[playerName]) ? state.player_guesses[playerName] : 0;
+    if (guessCountEl) guessCountEl.innerText = `(${myGuesses}/3)`;
+    if (gInput && gBtn) {
+        if (myGuesses >= 3) {
+            gInput.disabled = true;
+            gBtn.disabled = true;
+            gInput.style.backgroundColor = '#f8d7da';
+            gInput.style.borderColor = '#f5c6cb';
+            gInput.placeholder = "Out of guesses (3/3)!";
+        } else {
+            gInput.disabled = false;
+            gBtn.disabled = false;
+            gInput.style.backgroundColor = '#ffffff';
+            gInput.style.borderColor = '#ccc';
+            gInput.placeholder = "Your Word Guess...";
+        }
+    }
 
     if (state.phase === 'WAITING') {
         if (turnStatus) turnStatus.innerText = `Waiting for players... (${state.players.length}/${maxRequired} Connected)`;
@@ -144,7 +185,6 @@ function updateUI(state) {
         if (turnStatus) turnStatus.innerText = `Game in progress! Chooser: ${chooser}`;
         if (wordSelectBox) wordSelectBox.style.display = 'none';
 
-        // Display controls based on role
         if (window.isChooser) {
             if (askBox) askBox.style.display = 'none';
             if (guessBox) guessBox.style.display = 'none';
@@ -156,12 +196,11 @@ function updateUI(state) {
 
         if (scoreboardModal) scoreboardModal.style.display = 'none';
 
-        // Start 5-minute Timer (300 seconds) if not already running
         if (!gameTimer) {
             startTimer(300);
         }
     } else if (state.phase === 'SCOREBOARD') {
-        // Stop timer immediately on round completion
+        // Immediate modal transition for all players including the winner
         clearInterval(gameTimer);
         gameTimer = null;
         if (timerDisplay) timerDisplay.style.display = 'none';
