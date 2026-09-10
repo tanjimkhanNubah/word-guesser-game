@@ -24,7 +24,8 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'player_guesses': {},
                 'total_rounds': 0,
                 'completed_rounds': 0,
-                'is_processing_turn': False
+                'is_processing_turn': False,
+                'max_players': 3  # Default limit
             }
 
     async def disconnect(self, close_code):
@@ -37,12 +38,17 @@ class GameConsumer(AsyncWebsocketConsumer):
         game_state = ROOMS[self.room_name]
 
         if action == 'join':
+            # Dynamic max_players selection from Frontend if provided
+            if 'max_players' in data:
+                game_state['max_players'] = int(data['max_players'])
+
             if player and player not in game_state['players']:
                 game_state['players'].append(player)
                 game_state['scores'][player] = 0
 
-            # 3 or more players trigger game start
-            if len(game_state['players']) >= 3 and game_state['phase'] == 'WAITING':
+            # Dynamic player count trigger logic
+            required_players = game_state['max_players']
+            if len(game_state['players']) >= required_players and game_state['phase'] == 'WAITING':
                 game_state['phase'] = 'WORD_SELECT'
                 game_state['total_rounds'] = len(game_state['players'])
             
@@ -162,7 +168,6 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.broadcast_state()
 
     async def broadcast_state(self):
-        # Serialize state safely for Channel Layer Redis
         state_data = json.loads(json.dumps(ROOMS[self.room_name]))
         await self.channel_layer.group_send(
             self.room_group_name,

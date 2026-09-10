@@ -6,9 +6,14 @@ const gameSocket = new WebSocket(
 
 gameSocket.onopen = function(e) {
     console.log("WebSocket Connection Established Successfully!");
+    
+    // HTML Element or URL clean check for max_players option
+    const maxPlayersTarget = typeof maxPlayers !== 'undefined' ? maxPlayers : 3;
+
     gameSocket.send(JSON.stringify({
         'action': 'join',
-        'player': playerName
+        'player': playerName,
+        'max_players': maxPlayersTarget
     }));
 };
 
@@ -52,9 +57,10 @@ function updateUI(state) {
     const gameoverModal = document.getElementById('gameover-modal');
 
     const chooser = state.players[state.current_chooser_idx] || '';
+    const maxRequired = state.max_players || 3;
 
     if (state.phase === 'WAITING') {
-        if (turnStatus) turnStatus.innerText = `Waiting for players... (${state.players.length}/3 Connected)`;
+        if (turnStatus) turnStatus.innerText = `Waiting for players... (${state.players.length}/${maxRequired} Connected)`;
     } else if (state.phase === 'WORD_SELECT') {
         if (turnStatus) turnStatus.innerText = `Waiting for ${chooser} to pick a word...`;
         if (wordSelectBox) wordSelectBox.style.display = (playerName === chooser) ? 'block' : 'none';
